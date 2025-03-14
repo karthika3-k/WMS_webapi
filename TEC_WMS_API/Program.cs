@@ -1,4 +1,5 @@
 using TEC_WMS_API.Data;
+using TEC_WMS_API.Interface;
 using TEC_WMS_API.Service;
 
 
@@ -31,6 +32,7 @@ builder.Services.AddSingleton<DatabaseConfig>();
 #region Service
 builder.Services.AddScoped<UserService, UserService>();
 builder.Services.AddScoped<LoginService, LoginService>();
+builder.Services.AddScoped<IDevice, DeviceService>();
 #endregion
 
 
