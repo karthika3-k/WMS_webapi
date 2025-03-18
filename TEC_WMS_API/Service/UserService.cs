@@ -96,7 +96,7 @@ namespace TEC_WMS_API.Service
                             WareHouse = reader.GetString(3),
                             Role = reader.GetString(4),
                             DeviceId = reader.GetString(5),
-                            IsActive = reader.GetBoolean(6)
+                            IsActive = reader.GetBoolean(8)
                         };
 
                         users.Add(loginRequest);
