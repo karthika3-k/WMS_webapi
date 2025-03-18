@@ -17,7 +17,7 @@ namespace TEC_WMS_API.Controllers
         }
 
         [HttpPost("CreateDevice")]
-        public async Task<IActionResult> CreateDevice([FromBody] DeviceRequest device)
+        public async Task<IActionResult> CreateDevice([FromBody] UpdateDeviceRequest device)
         {
             try
             {
@@ -49,8 +49,41 @@ namespace TEC_WMS_API.Controllers
             }
         }
 
+        [HttpGet("DevicebyId")]
+        public async Task<IActionResult> DevicebyId(int id)
+        {
+            var user = await _service.GetDeviceByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound(); // Return 404 if user not found
+            }
+            return Ok(user);
+        }
 
+        [HttpPut("UpdateDevice")]
+        public async Task<IActionResult> UpdateDevice(int id, [FromBody] UpdateDeviceRequest device)
+        {
+            if (string.IsNullOrEmpty(device.UserName))
+            {
+                return BadRequest("Invalid data.");
+            }
+            device.DeviceId = id;
+            var Device = await _service.UpdateDeviceAsync(device);
 
+            if (Device == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(Device);
+        }
+
+        [HttpGet("DeviceList")]
+        public async Task<IActionResult> DeviceList()
+        {
+            var user = await _service.GetAllDeviceAsync();
+            return Ok(user);
+        }
 
     }
 }
