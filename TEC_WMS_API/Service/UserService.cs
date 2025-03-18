@@ -1,5 +1,6 @@
 ﻿using System.Data.SqlClient;
 using TEC_WMS_API.Data;
+using TEC_WMS_API.Interface;
 using TEC_WMS_API.Models.RequestModel;
 
 
@@ -11,7 +12,7 @@ namespace TEC_WMS_API.Service
         Task<bool> DeleteUserAsync(int id);
         Task<IEnumerable<LoginRequest>> GetAllUserAsync();
         Task<LoginRequest?> GetUserByIdAsync(int id);
-        Task<bool> UpdateUserAsync(LoginRequest login);
+        Task<bool> UpdateUserAsync(int id,LoginRequest login);
     }
     public class UserService : IUserService
     {
@@ -45,11 +46,11 @@ namespace TEC_WMS_API.Service
                 cmd.Parameters.AddWithValue("@CreatedBy", login.CreatedBy);
                 cmd.Parameters.AddWithValue("@CreatedOn", login.CreatedOn);
                 cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
-                cmd.Parameters.AddWithValue("@UpdatedBy", "");
-                cmd.Parameters.AddWithValue("@UpdatedOn", "");
+                cmd.Parameters.AddWithValue("@UpdatedBy",  DBNull.Value );
+                cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value);
                 cmd.Parameters.AddWithValue("@IsDeleted", false);
 
-                var result = await cmd.ExecuteScalarAsync();
+                var result = await cmd.ExecuteNonQueryAsync();
                 conn.Close();
                 return Convert.ToInt32(result);
 
@@ -95,7 +96,7 @@ namespace TEC_WMS_API.Service
                             WareHouse = reader.GetString(3),
                             Role = reader.GetString(4),
                             DeviceId = reader.GetString(5),
-                            CreatedBy = reader.GetString(6)
+                            IsActive = reader.GetBoolean(6)
                         };
 
                         users.Add(loginRequest);
@@ -111,7 +112,7 @@ namespace TEC_WMS_API.Service
             LoginRequest? loginRequest = null;
             using (var conn = _databaseConfig.GetConnection())
             {
-                string Squery = "SELECT * FROM OUSR WHERE ID = @id";
+                Squery = "SELECT * FROM OUSR WHERE ID = @id";
                 var cmd = new SqlCommand(Squery, conn);
                 cmd.Parameters.AddWithValue("@id", id);
                 await conn.OpenAsync();
@@ -136,27 +137,25 @@ namespace TEC_WMS_API.Service
             return loginRequest;
         }
 
-        public async Task<bool> UpdateUserAsync(LoginRequest login)
+        public async Task<bool> UpdateUserAsync(int id,LoginRequest login)
         {
             using (var conn = _databaseConfig.GetConnection())
             {
                 Squery = "UPDATE OUSR SET UserName = @UserName, Password = @Password, Warehouse = @Warehouse, Role = @Role, DeviceId = @DeviceId, " +
-                    "CreatedBy = @CreatedBy, CreatedOn = @CreatedOn, IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn, " +
-                    "IsDeleted = @IsDeleted  WHERE ID = @ID;";
+                    "IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn WHERE ID = @ID;";
                 var cmd = new SqlCommand(Squery, conn);
                 conn.Open();
                 login.UpdatedOn = DateTime.Now;
+                cmd.Parameters.AddWithValue("@ID", id);
                 cmd.Parameters.AddWithValue("@UserName", login.UserName);
                 cmd.Parameters.AddWithValue("@Password", login.Password);
                 cmd.Parameters.AddWithValue("@Warehouse", login.WareHouse);
                 cmd.Parameters.AddWithValue("@Role", login.Role);
-                cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);
-                cmd.Parameters.AddWithValue("@CreatedBy", "");
-                cmd.Parameters.AddWithValue("@CreatedOn", "");
+                cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);               
                 cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
                 cmd.Parameters.AddWithValue("@UpdatedBy", login.UpdatedBy);
                 cmd.Parameters.AddWithValue("@UpdatedOn", login.UpdatedOn);
-                cmd.Parameters.AddWithValue("@IsDeleted", login.IsDeleted);
+             
 
                 await conn.OpenAsync();
                 var rowsAffected = await cmd.ExecuteNonQueryAsync();

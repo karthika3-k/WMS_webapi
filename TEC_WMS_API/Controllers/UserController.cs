@@ -3,12 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using TEC_WMS_API.Models.RequestModel;
 using TEC_WMS_API.Service;
 
-
-
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace TEC_WMS_API.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -29,6 +28,7 @@ namespace TEC_WMS_API.Controllers
         }
 
         // GET api/<UserController>/5
+        
         [HttpGet("UserbyId")]
         public async Task<IActionResult> UserbyId(int id)
         {
@@ -67,7 +67,7 @@ namespace TEC_WMS_API.Controllers
                 return BadRequest("Invalid data."); 
             }
 
-            var user = await _service.UpdateUserAsync(login); 
+            var user = await _service.UpdateUserAsync(id,login); 
 
             if (user == null)
             {

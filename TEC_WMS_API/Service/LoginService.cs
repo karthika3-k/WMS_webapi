@@ -1,6 +1,11 @@
 ﻿using System.Data.SqlClient;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 using TEC_WMS_API.Data;
 using TEC_WMS_API.Models.RequestModel;
+using TEC_WMS_API.Models.ResponseModel;
 
 
 namespace TEC_WMS_API.Service
@@ -14,11 +19,13 @@ namespace TEC_WMS_API.Service
     {
         //private readonly ILoginRepository _repository;
         private readonly DatabaseConfig _databaseConfig;
+        private readonly IConfiguration _configuration;
 
-        public LoginService(DatabaseConfig databaseConfig)
+        public LoginService(DatabaseConfig databaseConfig, IConfiguration configuration)
         {
             // _repository = repository;
             _databaseConfig = databaseConfig;
+            _configuration = configuration;
         }
         string sQuery = string.Empty;
         public async Task<LoginRequest?> GetByIdAsync(string UserName, string Password)
@@ -50,7 +57,26 @@ namespace TEC_WMS_API.Service
 
                         if (VerifyPassword(HashPassword(Password), login.Password))
                         {
-                            return login;
+
+                            var claims = new[]
+                            {
+                            new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                            new Claim("ID", login.UserId.ToString()),
+                            new Claim("UserName", login.UserName),
+                        };
+                            var Key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                            var signIn = new SigningCredentials(Key, SecurityAlgorithms.HmacSha256);
+                            var token = new JwtSecurityToken(
+                                _configuration["Jwt:Issuer"],
+                                _configuration["Jwt:Audience"],
+                                claims,
+                                expires: DateTime.UtcNow.AddMinutes(60),
+                                signingCredentials: signIn
+                            );
+                            string tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
+                            return new LoginResponse { Token = tokenValue, Login = login };
+                            //return login;
                         }
 
                     }
