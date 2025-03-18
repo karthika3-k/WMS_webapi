@@ -4,6 +4,10 @@ namespace TEC_WMS_API.Interface
 {
     public interface IDevice
     {
-        Task<int> CreateDeviceAsync(DeviceRequest device);
+        Task<int> CreateDeviceAsync(UpdateDeviceRequest device);
+        Task<DeviceRequest> GetDeviceByIdAsync(int id);
+        Task<bool> UpdateDeviceAsync(UpdateDeviceRequest device);
+        Task<List<DeviceRequest>?> GetAllDeviceAsync();
+
     }
 }
