@@ -70,7 +70,9 @@ namespace TEC_WMS_API.Service
                 cmd.Parameters.AddWithValue("@id", id);
                 await conn.OpenAsync();
                 var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                conn.CloseAsync();
                 return rowsAffected > 0;
+                
 
             }
         }
@@ -155,9 +157,7 @@ namespace TEC_WMS_API.Service
                 cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
                 cmd.Parameters.AddWithValue("@UpdatedBy", login.UpdatedBy);
                 cmd.Parameters.AddWithValue("@UpdatedOn", login.UpdatedOn);
-             
-
-                await conn.OpenAsync();
+                
                 var rowsAffected = await cmd.ExecuteNonQueryAsync();
                 conn.Close();
                 return rowsAffected > 0;
