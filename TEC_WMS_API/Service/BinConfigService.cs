@@ -23,8 +23,8 @@ namespace TEC_WMS_API.Service
                 {
                     await conn.OpenAsync();
 
-                    Squery = "INSERT INTO OBNC (BinCode, BinName, Prefix, StartNo, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn) " +
-                                  "VALUES (@BinCode, @BinName, @Prefix, @StartNo, @CreatedBy, @CreatedOn, @UpdatedBy, @UpdatedOn); " +
+                    Squery = "INSERT INTO OBNC (BinCode, BinName, Prefix, StartNo, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn,WhsCode, EndNo) " +
+                                  "VALUES (@BinCode, @BinName, @Prefix, @StartNo, @CreatedBy, @CreatedOn, @UpdatedBy, @UpdatedOn,@WhsCode,@EndNo); " +
                                   "SELECT SCOPE_IDENTITY();";
 
                     using (var cmd = new SqlCommand(Squery, conn))
@@ -37,6 +37,8 @@ namespace TEC_WMS_API.Service
                         cmd.Parameters.AddWithValue("@CreatedOn", binConfig.CreatedOn);
                         cmd.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);
                         cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
+                        cmd.Parameters.AddWithValue("@EndNo", binConfig.EndNo);
 
                         var result = await cmd.ExecuteNonQueryAsync();
                         return Convert.ToInt32(result);
@@ -86,6 +88,8 @@ namespace TEC_WMS_API.Service
                             BinName = reader.GetString(2),
                             Prefix = reader.GetString(3),
                             StartNo = reader.GetInt32(4),
+                            WhsCode = reader.GetString(9),
+                            EndNo = reader.GetInt32(10),                            
                         };
                         binconfig.Add(bincongrequest);
                     }
@@ -115,6 +119,8 @@ namespace TEC_WMS_API.Service
                             BinName = reader.GetString(2),
                             Prefix = reader.GetString(3),
                             StartNo = reader.GetInt32(4),
+                            WhsCode = reader.GetString(9),
+                            EndNo = reader.GetInt32(10),
                         };
                     }
                 }
@@ -134,7 +140,7 @@ namespace TEC_WMS_API.Service
                     await conn.OpenAsync();
 
                     Squery = "UPDATE OBNC SET BinCode = @BinCode, BinName = @BinName, Prefix = @Prefix, StartNo = @StartNo," +
-                    "UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn WHERE ID = @ID;";
+                    "UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn,WhsCode=@WhsCode, EndNo=@EndNo WHERE ID = @ID;";
 
                     using (var cmd = new SqlCommand(Squery, conn))
                     {
@@ -143,6 +149,8 @@ namespace TEC_WMS_API.Service
                         cmd.Parameters.AddWithValue("@BinName", binConfig.BinName);
                         cmd.Parameters.AddWithValue("@Prefix", binConfig.Prefix);
                         cmd.Parameters.AddWithValue("@StartNo", binConfig.StartNo);
+                        cmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
+                        cmd.Parameters.AddWithValue("@EndNo", binConfig.EndNo);
                         cmd.Parameters.AddWithValue("@UpdatedBy", binConfig.UpdatedBy);
                         cmd.Parameters.AddWithValue("@UpdatedOn", binConfig.UpdatedOn);
 
@@ -160,5 +168,6 @@ namespace TEC_WMS_API.Service
                 }
             }
         }
+
     }
 }

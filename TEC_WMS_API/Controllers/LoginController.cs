@@ -17,24 +17,7 @@ namespace TEC_WMS_API.Controllers
         public LoginController(LoginService service)
         {
             _service = service;
-        }
-        //// GET: api/<LoginController>
-        //[HttpGet]
-        //public IEnumerable<string> Get()
-        //{
-        //    return new string[] { "value1", "value2" };
-        //}
-
-        //// GET api/<LoginController>/5
-        //[HttpGet("{id}")]
-        //public string Get(int id)
-        //{
-        //    return "value";
-        //}
-
-        // POST api/<LoginController>
-
-
+        }      
 
         [HttpGet("Login")]
         public async Task<IActionResult> Login(string username, string password)
@@ -53,36 +36,6 @@ namespace TEC_WMS_API.Controllers
 
             return Ok(loginResponse);
         }
-
-        //[HttpPost("myroute")]
-        //public async Task<IActionResult> Post([FromBody] LoginRequest loginRequest)
-        //{
-        //    if (loginRequest == null || string.IsNullOrEmpty(loginRequest.UserName) || string.IsNullOrEmpty(loginRequest.Password))
-        //    {
-        //        return BadRequest("Username or Password cannot be empty.");
-        //    }
-
-        //    var loginResponse = await _service.GetByIdAsync(loginRequest.UserName, loginRequest.Password);
-
-        //    if (loginResponse == null)
-        //    {
-        //        return Unauthorized("Invalid username or password.");
-        //    }
-
-        //    return Ok(loginResponse);
-        //}
-
-
-        //// PUT api/<LoginController>/5
-        //[HttpPut("{id}")]
-        //public void Put(int id, [FromBody] string value)
-        //{
-        //}
-
-        //// DELETE api/<LoginController>/5
-        //[HttpDelete("{id}")]
-        //public void Delete(int id)
-        //{
-        //}
+        
     }
 }
