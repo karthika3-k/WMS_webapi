@@ -139,6 +139,21 @@ namespace TEC_WMS_API.Service
             return deviceRequests;
         }
 
+        public async Task<bool> DeleteDeviceAsync(int id)
+        {
+            using (var conn = _databaseConfig.GetConnection())
+            {
+                string Squery = "DELETE FROM ODVS WHERE DeviceId = @id;";
+                var cmd = new SqlCommand(Squery, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                await conn.OpenAsync();
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                conn.CloseAsync();
+                return rowsAffected > 0;
+
+
+            }
+        }
 
 
     }

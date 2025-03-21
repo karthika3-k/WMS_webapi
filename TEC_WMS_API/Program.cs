@@ -60,6 +60,7 @@ builder.Services.AddScoped<LoginService, LoginService>();
 builder.Services.AddScoped<IDevice, DeviceService>();
 builder.Services.AddScoped<IBinConfig, BinConfigService>();
 builder.Services.AddScoped<IWareHouse, WareHouseService>();
+builder.Services.AddScoped<IBinMaster, BinMasterService>();
 #endregion
 
 

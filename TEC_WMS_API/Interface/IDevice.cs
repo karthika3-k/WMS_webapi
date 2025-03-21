@@ -8,6 +8,7 @@ namespace TEC_WMS_API.Interface
         Task<DeviceRequest> GetDeviceByIdAsync(int id);
         Task<bool> UpdateDeviceAsync(UpdateDeviceRequest device);
         Task<List<DeviceRequest>?> GetAllDeviceAsync();
+        Task<bool> DeleteDeviceAsync(int id);
 
     }
 }

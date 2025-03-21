@@ -85,5 +85,18 @@ namespace TEC_WMS_API.Controllers
             return Ok(user);
         }
 
+        [HttpDelete("DeleteDevice")]
+        public async Task<IActionResult> DeleteDevice(int id)
+        {
+            var user = await _service.DeleteDeviceAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
     }
 }
