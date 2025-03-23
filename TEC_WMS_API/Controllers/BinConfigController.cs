@@ -39,19 +39,23 @@ namespace TEC_WMS_API.Controllers
 
         // POST api/<BinConfigController>
         [HttpPost("CreateBinConfig")]
-        public async Task<IActionResult> CreateBinConfig([FromBody] BinConfigRequest binConfig)
+        public async Task<IActionResult> CreateBinConfig([FromBody] IEnumerable<BinConfigRequest> binConfigs)
         {
-            if (binConfig == null)
+            if (binConfigs == null || !binConfigs.Any())
             {
-                return BadRequest("Invalid data.");
+                return BadRequest("Invalid data or empty list.");
             }
-            var binConfigResponse = await _service.CreateBinConfigAsync(binConfig);
-            if (binConfigResponse==null)
+          
+            var result = await _service.CreateBinConfigsAsync(binConfigs);
+
+            if (result <= 0)
             {
-                return BadRequest("User creation failed.");
+                return BadRequest("BinConfig creation failed.");
             }
-            return CreatedAtAction(nameof(CreateBinConfig), new { id = binConfig.BinConfigId }, binConfig);
+           
+            return CreatedAtAction(nameof(CreateBinConfig), new { count = result }, binConfigs);
         }
+
 
         // PUT api/<BinConfigController>/5
         [HttpPut("UpdateBinConfig")]

@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data;
+using System.Data.SqlClient;
 using TEC_WMS_API.Data;
 using TEC_WMS_API.Interface;
 using TEC_WMS_API.Models.RequestModel;
@@ -13,40 +14,42 @@ namespace TEC_WMS_API.Service
             _databaseConfig = databaseConfig;
         }
         string Squery = string.Empty;
-        public async Task<int> CreateBinConfigAsync(BinConfigRequest binConfig)
+        public async Task<int> CreateBinConfigsAsync(IEnumerable<BinConfigRequest> binConfigs)
         {
-            binConfig.CreatedOn = DateTime.Now;
-
             using (var conn = _databaseConfig.GetConnection())
             {
                 try
                 {
                     await conn.OpenAsync();
-
-                    Squery = "INSERT INTO OBNC (BinCode, BinName, Prefix, StartNo, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn,WhsCode, EndNo) " +
-                                  "VALUES (@BinCode, @BinName, @Prefix, @StartNo, @CreatedBy, @CreatedOn, @UpdatedBy, @UpdatedOn,@WhsCode,@EndNo); " +
-                                  "SELECT SCOPE_IDENTITY();";
-
-                    using (var cmd = new SqlCommand(Squery, conn))
+                   
+                    int rowsInserted = 0;
+                   
+                    foreach (var binConfig in binConfigs)
                     {
-                        cmd.Parameters.AddWithValue("@BinCode", binConfig.BinCode);
-                        cmd.Parameters.AddWithValue("@BinName", binConfig.BinName);
-                        cmd.Parameters.AddWithValue("@Prefix", binConfig.Prefix);
-                        cmd.Parameters.AddWithValue("@StartNo", binConfig.StartNo);
-                        cmd.Parameters.AddWithValue("@CreatedBy", binConfig.CreatedBy);
-                        cmd.Parameters.AddWithValue("@CreatedOn", binConfig.CreatedOn);
-                        cmd.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
-                        cmd.Parameters.AddWithValue("@EndNo", binConfig.EndNo);
+                        string query = "INSERT INTO OBNC (BinCode, BinName, Prefix, WhsCode,IsActive, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn) " +
+                                       "VALUES (@BinCode, @BinName, @Prefix, @WhsCode, @IsActive,@CreatedBy, @CreatedOn, @UpdatedBy, @UpdatedOn);";
 
-                        var result = await cmd.ExecuteNonQueryAsync();
-                        return Convert.ToInt32(result);
+                        using (var cmd = new SqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@BinCode", binConfig.BinCode);
+                            cmd.Parameters.AddWithValue("@BinName", binConfig.BinName);
+                            cmd.Parameters.AddWithValue("@Prefix", binConfig.Prefix);
+                            cmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
+                            cmd.Parameters.AddWithValue("@IsActive", binConfig.IsActive);
+                            cmd.Parameters.AddWithValue("@CreatedBy", binConfig.CreatedBy);
+                            cmd.Parameters.AddWithValue("@CreatedOn", DateTime.Now);  
+                            cmd.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);  
+                            cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value); 
+                            
+                            rowsInserted += await cmd.ExecuteNonQueryAsync();
+                        }
                     }
+
+                    return rowsInserted;
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("An error occurred while creating the BinConfig.", ex);
+                    throw new Exception("An error occurred while creating the BinConfigs.", ex);
                 }
                 finally
                 {
@@ -54,7 +57,6 @@ namespace TEC_WMS_API.Service
                 }
             }
         }
-
 
         public async Task<bool> DeleteBinConfigAsync(int id)
         {
@@ -87,9 +89,8 @@ namespace TEC_WMS_API.Service
                             BinCode = reader.GetString(1),
                             BinName = reader.GetString(2),
                             Prefix = reader.GetString(3),
-                            StartNo = reader.GetInt32(4),
-                            WhsCode = reader.GetString(9),
-                            EndNo = reader.GetInt32(10),                            
+                            WhsCode = reader.GetString(4),
+                            IsActive = reader.GetBoolean(5)
                         };
                         binconfig.Add(bincongrequest);
                     }
@@ -118,9 +119,7 @@ namespace TEC_WMS_API.Service
                             BinCode = reader.GetString(1),
                             BinName = reader.GetString(2),
                             Prefix = reader.GetString(3),
-                            StartNo = reader.GetInt32(4),
-                            WhsCode = reader.GetString(9),
-                            EndNo = reader.GetInt32(10),
+                            WhsCode = reader.GetString(4),
                         };
                     }
                 }
@@ -139,18 +138,17 @@ namespace TEC_WMS_API.Service
                 {
                     await conn.OpenAsync();
 
-                    Squery = "UPDATE OBNC SET BinCode = @BinCode, BinName = @BinName, Prefix = @Prefix, StartNo = @StartNo," +
-                    "UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn,WhsCode=@WhsCode, EndNo=@EndNo WHERE ID = @ID;";
+                    Squery = "UPDATE OBNC SET BinCode = @BinCode, BinName = @BinName, Prefix = @Prefix,WhsCode=@WhsCode, IsActive = @IsActive," +
+                    "UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn WHERE ID = @ID;";
 
                     using (var cmd = new SqlCommand(Squery, conn))
                     {
                         cmd.Parameters.AddWithValue("@ID", id);
                         cmd.Parameters.AddWithValue("@BinCode", binConfig.BinCode);
                         cmd.Parameters.AddWithValue("@BinName", binConfig.BinName);
-                        cmd.Parameters.AddWithValue("@Prefix", binConfig.Prefix);
-                        cmd.Parameters.AddWithValue("@StartNo", binConfig.StartNo);
+                        cmd.Parameters.AddWithValue("@Prefix", binConfig.Prefix);                       
                         cmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
-                        cmd.Parameters.AddWithValue("@EndNo", binConfig.EndNo);
+                        cmd.Parameters.AddWithValue("@IsActive", binConfig.IsActive);
                         cmd.Parameters.AddWithValue("@UpdatedBy", binConfig.UpdatedBy);
                         cmd.Parameters.AddWithValue("@UpdatedOn", binConfig.UpdatedOn);
 
