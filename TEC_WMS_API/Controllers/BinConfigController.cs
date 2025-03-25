@@ -24,6 +24,14 @@ namespace TEC_WMS_API.Controllers
             var binConfig = await _service.GetAllBinConfigAsync();
             return Ok(binConfig);
         }
+        
+        // GET: api/<BinConfigController>
+        [HttpGet("BinConfigListbyWhsCode")]
+        public async Task<IActionResult> BinConfigListbyWhsCode(string whsCode)
+        {
+            var binConfig = await _service.GetAllBinListbywhsConfigAsync(whsCode);
+            return Ok(binConfig);
+        }
 
         // GET api/<BinConfigController>/5
         [HttpGet("BinConfigid")]
@@ -59,13 +67,13 @@ namespace TEC_WMS_API.Controllers
 
         // PUT api/<BinConfigController>/5
         [HttpPut("UpdateBinConfig")]
-        public async Task<IActionResult> UpdateBinConfig(int id, [FromBody] BinConfigRequest binConfig)
+        public async Task<IActionResult> UpdateBinConfig(IEnumerable<BinConfigRequest> binConfigs)
         {
-            if (string.IsNullOrEmpty(binConfig.BinCode))
+            if (binConfigs == null || !binConfigs.Any())
             {
-                return BadRequest("Invalid data.");
+                return BadRequest("Invalid data or empty list.");
             }
-            var user = await _service.UpdateBinConfigAsync(id,binConfig);
+            var user = await _service.UpdateBinConfigAsync(binConfigs);
 
             if (user == null)
             {
@@ -77,9 +85,9 @@ namespace TEC_WMS_API.Controllers
 
         // DELETE api/<BinConfigController>/5
         [HttpDelete("DeleteBinConfig")]
-        public async Task<IActionResult> DeleteBinConfig(int id)
+        public async Task<IActionResult> DeleteBinConfig(string whsCode)
         {
-            var user = await _service.DeleteBinConfigAsync(id);
+            var user = await _service.DeleteBinConfigAsync(whsCode);
 
             if (user == null)
             {
