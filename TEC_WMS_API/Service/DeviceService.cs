@@ -155,6 +155,30 @@ namespace TEC_WMS_API.Service
             }
         }
 
+        public async Task<IEnumerable<DevicedropdownRequest>> GetAllDevicedropdownAsync()
+        {
+            var device = new List<DevicedropdownRequest>();
+            using (var conn = _databaseConfig.GetConnection())
+            {
+               string Squery = "SELECT * FROM ODVS";
+                var cmd = new SqlCommand(Squery, conn);
+                await conn.OpenAsync();
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    for (int i = 0; await reader.ReadAsync(); i++)
+                    {
+                        var devicedropdownrequest = new DevicedropdownRequest
+                        {
+                            DeviceId = reader.GetInt32(0),
+                            DeviceSerialNo = reader.GetString(2)
+                        };
+                        device.Add(devicedropdownrequest);
 
+                    };
+
+                }
+                return device;
+            }
+        }
     }
 }

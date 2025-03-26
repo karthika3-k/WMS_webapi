@@ -32,4 +32,9 @@ namespace TEC_WMS_API.Models.RequestModel
         public string? UpdatedBy { get; set; }
         public DateTime? UpdatedOn { get; set; }
     }
+    public class DevicedropdownRequest
+    {
+        public int? DeviceId { get; set; }
+        public string? DeviceSerialNo { get; set; }
+    }
 }

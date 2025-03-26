@@ -98,5 +98,13 @@ namespace TEC_WMS_API.Controllers
             return NoContent();
         }
 
+        [HttpGet]
+        [Route("DevicedropdownList")]
+        public async Task<IActionResult> DevicedropdownList()
+        {
+            var devicedropdown = await _service.GetAllDevicedropdownAsync();
+            return Ok(devicedropdown);
+        }
+
     }
 }
