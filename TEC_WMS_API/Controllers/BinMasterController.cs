@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using TEC_WMS_API.Interface;
 using TEC_WMS_API.Models.RequestModel;
+using TEC_WMS_API.Service;
 
 namespace TEC_WMS_API.Controllers
 {
-    public class BinMasterController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BinMasterController : ControllerBase
     {
 
         private readonly IBinMaster _service;      
@@ -35,20 +38,40 @@ namespace TEC_WMS_API.Controllers
         }
 
 
-        [HttpPost("CreateBinMaster")]
-        public async Task<IActionResult> CreateBinMaster([FromBody] BinMasterRequest binMaster)
+        [HttpGet("BinMasterByWhs")]
+        public async Task<IActionResult> BinMasterByWhs(string whsCode)
         {
-            if (binMaster == null)
+            var binConfig = await _service.GetBinMasterByWhsAsync(whsCode);
+            if (binConfig == null)
             {
-                return BadRequest("Invalid data.");
+                return NotFound();
             }
-            var binConfigResponse = await _service.CreateBinMasterAsync(binMaster);
-            if (binConfigResponse == null)
-            {
-                return BadRequest("User creation failed.");
-            }
-            return CreatedAtAction(nameof(CreateBinMaster), new { id = binMaster.BinID }, binMaster);
+            return Ok(binConfig);
         }
+
+
+        [HttpPost("CreateBinMaster")]
+        public async Task<IActionResult> CreateBinMasterAsync([FromBody] List<BinMasterRequest> binMasters)
+        {
+            if (binMasters == null || binMasters.Count == 0)
+            {
+                return BadRequest("No data provided.");
+            }
+
+            try
+            {
+                int insertedRows = await _service.CreateBinMasterAsync(binMasters);
+                return Ok(new { message = "Data inserted successfully", count = insertedRows });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        
+
+
 
         [HttpPut("UpdateBinMaster")]
         public async Task<IActionResult> UpdateBinMaster(int id, [FromBody] BinMasterRequest binMaster)
