@@ -14,20 +14,40 @@ namespace TEC_WMS_API.Service
             _databaseConfig = databaseConfig;
         }
         string Squery = string.Empty;
-        public async Task<int> CreateBinConfigsAsync(IEnumerable<BinConfigRequest> binConfigs)
+        public async Task<string> CreateBinConfigsAsync(IEnumerable<BinConfigRequest> binConfigs)
         {
             using (var conn = _databaseConfig.GetConnection())
             {
                 try
                 {
                     await conn.OpenAsync();
-                   
+
                     int rowsInserted = 0;
-                   
+                    string message = string.Empty;  // Initialize message string
+
                     foreach (var binConfig in binConfigs)
                     {
-                        string query = "INSERT INTO OBNC (BinCode, BinName, Prefix, WhsCode,IsActive, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn) " +
-                                       "VALUES (@BinCode, @BinName, @Prefix, @WhsCode, @IsActive,@CreatedBy, @CreatedOn, @UpdatedBy, @UpdatedOn);";
+                        // Check if the BinCode and WhsCode already exist in the database
+                        string checkQuery = "SELECT COUNT(*) FROM OBNC WHERE BinCode = @BinCode AND WhsCode = @WhsCode";
+
+                        using (var checkCmd = new SqlCommand(checkQuery, conn))
+                        {
+                            checkCmd.Parameters.AddWithValue("@BinCode", binConfig.BinCode);
+                            checkCmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
+
+                            int count = (int)await checkCmd.ExecuteScalarAsync();
+
+                            // If the combination already exists, return a message and stop processing further.
+                            if (count > 0)
+                            {
+                                message = $"The BinCode '{binConfig.BinCode}' with WhsCode '{binConfig.WhsCode}' already exists.";
+                                return message;  // Early return with the message
+                            }
+                        }
+
+                        // If not exists, insert the new record
+                        string query = "INSERT INTO OBNC (BinCode, BinName, Prefix, WhsCode, IsActive, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn) " +
+                                       "VALUES (@BinCode, @BinName, @Prefix, @WhsCode, @IsActive, @CreatedBy, @CreatedOn, @UpdatedBy, @UpdatedOn);";
 
                         using (var cmd = new SqlCommand(query, conn))
                         {
@@ -37,15 +57,15 @@ namespace TEC_WMS_API.Service
                             cmd.Parameters.AddWithValue("@WhsCode", binConfig.WhsCode);
                             cmd.Parameters.AddWithValue("@IsActive", binConfig.IsActive);
                             cmd.Parameters.AddWithValue("@CreatedBy", binConfig.CreatedBy);
-                            cmd.Parameters.AddWithValue("@CreatedOn", DateTime.Now);  
-                            cmd.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);  
-                            cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value); 
-                            
+                            cmd.Parameters.AddWithValue("@CreatedOn", DateTime.Now);
+                            cmd.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);
+                            cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value);
+
                             rowsInserted += await cmd.ExecuteNonQueryAsync();
                         }
                     }
 
-                    return rowsInserted;
+                    return rowsInserted > 0 ? $"{rowsInserted} rows inserted successfully." : "No records were inserted.";
                 }
                 catch (Exception ex)
                 {

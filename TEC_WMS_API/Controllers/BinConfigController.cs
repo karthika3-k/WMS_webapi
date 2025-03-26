@@ -53,15 +53,24 @@ namespace TEC_WMS_API.Controllers
             {
                 return BadRequest("Invalid data or empty list.");
             }
-          
+
+            // Assuming CreateBinConfigsAsync returns a string, so we parse it into an integer
             var result = await _service.CreateBinConfigsAsync(binConfigs);
 
-            if (result <= 0)
+            // Try to parse the result to an integer
+            if (!int.TryParse(result, out int resultCode))
+            {
+                return Ok(result);
+            }
+
+            // Check if the result indicates failure (e.g., resultCode == 0)
+            if (resultCode == 0)
             {
                 return BadRequest("BinConfig creation failed.");
             }
-           
-            return CreatedAtAction(nameof(CreateBinConfig), new { count = result }, binConfigs);
+
+            // If successful, return a CreatedAtAction response with the count
+            return CreatedAtAction(nameof(CreateBinConfig), new { count = resultCode }, binConfigs);
         }
 
 
