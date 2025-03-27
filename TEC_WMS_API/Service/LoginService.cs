@@ -13,6 +13,7 @@ namespace TEC_WMS_API.Service
     public interface ILoginService
     {
         Task<LoginRequest?> GetByIdAsync(string UserName, string Password);
+        Task<bool> UpdateUserPwdAsync(int id, string userName, string password);
     }
 
     public class LoginService : ILoginService
@@ -95,5 +96,31 @@ namespace TEC_WMS_API.Service
         {
             return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password));
         }
+
+        public async Task<bool> UpdateUserPwdAsync(int id, string userName, string password)
+        {
+            using (var conn = _databaseConfig.GetConnection())
+            {
+                string Squery = "UPDATE OUSR SET UserName = @UserName, Password = @Password, UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn WHERE ID = @ID;";
+                var cmd = new SqlCommand(Squery, conn);
+                conn.Open();
+              
+                LoginRequest login = new LoginRequest();
+                login.UpdatedOn = DateTime.Now;
+
+                cmd.Parameters.AddWithValue("@ID", id);               // ID
+                cmd.Parameters.AddWithValue("@UserName", userName);    // UserName
+                cmd.Parameters.AddWithValue("@Password", HashPassword(password));  // Password (hashed)
+                cmd.Parameters.AddWithValue("@UpdatedBy", userName);   // UpdatedBy (who is making the change)
+                cmd.Parameters.AddWithValue("@UpdatedOn", login.UpdatedOn); // UpdatedOn (time of update)
+
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                conn.Close();
+
+                return rowsAffected > 0; // Return true if update is successful.
+            }
+        }
+
     }
 }

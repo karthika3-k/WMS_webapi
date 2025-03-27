@@ -150,7 +150,7 @@ namespace TEC_WMS_API.Service
                 login.UpdatedOn = DateTime.Now;
                 cmd.Parameters.AddWithValue("@ID", id);
                 cmd.Parameters.AddWithValue("@UserName", login.UserName);
-                cmd.Parameters.AddWithValue("@Password", login.Password);
+                cmd.Parameters.AddWithValue("@Password", HashPassword(login.Password));
                 cmd.Parameters.AddWithValue("@Warehouse", login.WareHouse);
                 cmd.Parameters.AddWithValue("@Role", login.Role);
                 cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);               

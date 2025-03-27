@@ -36,6 +36,24 @@ namespace TEC_WMS_API.Controllers
 
             return Ok(loginResponse);
         }
-        
+
+        [HttpPut("UpdateUserPwd")]
+        public async Task<IActionResult> UpdateUserPwd(int id, string userName, string password)
+        {
+            if (string.IsNullOrEmpty(userName))
+            {
+                return BadRequest("Invalid data.");
+            }
+
+            var user = await _service.UpdateUserPwdAsync(id, userName, password);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
+        }
+
     }
 }
