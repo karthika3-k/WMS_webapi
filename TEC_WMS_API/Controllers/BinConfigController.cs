@@ -66,7 +66,7 @@ namespace TEC_WMS_API.Controllers
             // Check if the result indicates failure (e.g., resultCode == 0)
             if (resultCode == 0)
             {
-                return BadRequest("BinConfig creation failed.");
+                return NotFound();
             }
 
             // If successful, return a CreatedAtAction response with the count

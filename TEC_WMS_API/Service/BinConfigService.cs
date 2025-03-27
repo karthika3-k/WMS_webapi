@@ -40,7 +40,7 @@ namespace TEC_WMS_API.Service
                             // If the combination already exists, return a message and stop processing further.
                             if (count > 0)
                             {
-                                message = $"The BinCode '{binConfig.BinCode}' with WhsCode '{binConfig.WhsCode}' already exists.";
+                                message = $"The WhsCode '{binConfig.WhsCode}' already exists.";
                                 return message;  // Early return with the message
                             }
                         }
@@ -65,7 +65,7 @@ namespace TEC_WMS_API.Service
                         }
                     }
 
-                    return rowsInserted > 0 ? $"{rowsInserted} rows inserted successfully." : "No records were inserted.";
+                    return rowsInserted > 0 ? $"BinConfig Saved successfully." : "No records were inserted.";
                 }
                 catch (Exception ex)
                 {
