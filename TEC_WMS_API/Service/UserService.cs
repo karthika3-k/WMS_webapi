@@ -27,34 +27,53 @@ namespace TEC_WMS_API.Service
         string Squery = string.Empty;
         public async Task<int> CreateUserAsync(LoginRequest login)
         {
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                conn.Open();
-                string query = "INSERT INTO OUSR (UserName, Password, Warehouse, Role, DeviceId, CreatedBy, CreatedOn, IsActive, UpdatedBy, UpdatedOn, IsDeleted) " +
-                               "VALUES (@UserName, @Password, @Warehouse, @Role, @DeviceId, @CreatedBy, @CreatedOn, @IsActive, @UpdatedBy, @UpdatedOn, @IsDeleted); " +
-                               "SELECT SCOPE_IDENTITY();";
+                using (var conn = _databaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    string query = "INSERT INTO OUSR (UserName, Password, Warehouse, Role, DeviceId, CreatedBy, CreatedOn, IsActive, UpdatedBy, UpdatedOn, IsDeleted) " +
+                                   "VALUES (@UserName, @Password, @Warehouse, @Role, @DeviceId, @CreatedBy, @CreatedOn, @IsActive, @UpdatedBy, @UpdatedOn, @IsDeleted); " +
+                                   "SELECT SCOPE_IDENTITY();";
 
-                var cmd = new SqlCommand(query, conn);
+                    var cmd = new SqlCommand(query, conn);
 
-                login.CreatedOn = DateTime.Now;
+                    login.CreatedOn = DateTime.Now;
 
-                cmd.Parameters.AddWithValue("@UserName", login.UserName);
-                cmd.Parameters.AddWithValue("@Password", HashPassword(login.Password));
-                cmd.Parameters.AddWithValue("@Warehouse", login.WareHouse);
-                cmd.Parameters.AddWithValue("@Role", login.Role);
-                cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);
-                cmd.Parameters.AddWithValue("@CreatedBy", login.CreatedBy);
-                cmd.Parameters.AddWithValue("@CreatedOn", login.CreatedOn);
-                cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
-                cmd.Parameters.AddWithValue("@UpdatedBy",  DBNull.Value );
-                cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value);
-                cmd.Parameters.AddWithValue("@IsDeleted", false);
+                    cmd.Parameters.AddWithValue("@UserName", login.UserName);
+                    cmd.Parameters.AddWithValue("@Password", HashPassword(login.Password));
+                    cmd.Parameters.AddWithValue("@Warehouse", login.WareHouse);
+                    cmd.Parameters.AddWithValue("@Role", login.Role);
+                    cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);
+                    cmd.Parameters.AddWithValue("@CreatedBy", login.CreatedBy);
+                    cmd.Parameters.AddWithValue("@CreatedOn", login.CreatedOn);
+                    cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
+                    cmd.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@UpdatedOn", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@IsDeleted", false);
 
-                var result = await cmd.ExecuteNonQueryAsync();
-                conn.Close();
-                return Convert.ToInt32(result);
+                    var result = await cmd.ExecuteNonQueryAsync();
+                    conn.Close();
+                    return Convert.ToInt32(result);
 
+                }
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(CreateUserAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{login}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+           
         }
         private string HashPassword(string password)
         {
@@ -63,105 +82,181 @@ namespace TEC_WMS_API.Service
 
         public async Task<bool> DeleteUserAsync(int id)
         {
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "DELETE FROM OUSR WHERE ID = @id;";
-                var cmd = new SqlCommand(Squery, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                await conn.OpenAsync();
-                var rowsAffected = await cmd.ExecuteNonQueryAsync();
-                conn.CloseAsync();
-                return rowsAffected > 0;
-                
+                using (var conn = _databaseConfig.GetConnection())
+                {
+                    Squery = "DELETE FROM OUSR WHERE ID = @id;";
+                    var cmd = new SqlCommand(Squery, conn);
+                    cmd.Parameters.AddWithValue("@id", id);
+                    await conn.OpenAsync();
+                    var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    conn.CloseAsync();
+                    return rowsAffected > 0;
 
+
+                }
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(DeleteUserAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{id}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+            
         }
 
         public async Task<IEnumerable<LoginRequest>> GetAllUserAsync()
         {
-            var users = new List<LoginRequest>();
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "SELECT * FROM OUSR";
-                var cmd = new SqlCommand(Squery, conn);
-                await conn.OpenAsync();
-
-                using (var reader = await cmd.ExecuteReaderAsync())
+                var users = new List<LoginRequest>();
+                using (var conn = _databaseConfig.GetConnection())
                 {
-                    for (int i = 0; await reader.ReadAsync(); i++)
+                    Squery = "SELECT * FROM OUSR";
+                    var cmd = new SqlCommand(Squery, conn);
+                    await conn.OpenAsync();
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        var loginRequest = new LoginRequest
+                        for (int i = 0; await reader.ReadAsync(); i++)
                         {
-                            UserId = reader.GetInt32(0),
-                            UserName = reader.GetString(1),
-                            Password = reader.GetString(2),
-                            WareHouse = reader.GetString(3),
-                            Role = reader.GetString(4),
-                            DeviceId = reader.GetString(5),
-                            IsActive = reader.GetBoolean(8)
-                        };
+                            var loginRequest = new LoginRequest
+                            {
+                                UserId = reader.GetInt32(0),
+                                UserName = reader.GetString(1),
+                                Password = reader.GetString(2),
+                                WareHouse = reader.GetString(3),
+                                Role = reader.GetString(4),
+                                DeviceId = reader.GetString(5),
+                                IsActive = reader.GetBoolean(8)
+                            };
 
-                        users.Add(loginRequest);
+                            users.Add(loginRequest);
+                        }
                     }
-                }
 
-                return users;
+                    return users;
+                }
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(GetAllUserAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{""}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+           
         }
 
         public async Task<LoginRequest?> GetUserByIdAsync(int id)
         {
-            LoginRequest? loginRequest = null;
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "SELECT * FROM OUSR WHERE ID = @id";
-                var cmd = new SqlCommand(Squery, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                await conn.OpenAsync();
-
-                using (var reader = await cmd.ExecuteReaderAsync())
+                LoginRequest? loginRequest = null;
+                using (var conn = _databaseConfig.GetConnection())
                 {
-                    if (await reader.ReadAsync())
+                    Squery = "SELECT * FROM OUSR WHERE ID = @id";
+                    var cmd = new SqlCommand(Squery, conn);
+                    cmd.Parameters.AddWithValue("@id", id);
+                    await conn.OpenAsync();
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        loginRequest = new LoginRequest
+                        if (await reader.ReadAsync())
                         {
-                            UserId = reader.GetInt32(0),
-                            UserName = reader.GetString(1),
-                            Password = reader.GetString(2),
-                            WareHouse = reader.GetString(3),
-                            Role = reader.GetString(4),
-                            DeviceId = reader.GetString(5),
-                            CreatedBy = reader.GetString(6)
-                        };
+                            loginRequest = new LoginRequest
+                            {
+                                UserId = reader.GetInt32(0),
+                                UserName = reader.GetString(1),
+                                Password = reader.GetString(2),
+                                WareHouse = reader.GetString(3),
+                                Role = reader.GetString(4),
+                                DeviceId = reader.GetString(5),
+                                CreatedBy = reader.GetString(6)
+                            };
+                        }
                     }
                 }
+                return loginRequest;
             }
-            return loginRequest;
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(GetUserByIdAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{id}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+            
         }
 
         public async Task<bool> UpdateUserAsync(int id,LoginRequest login)
         {
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "UPDATE OUSR SET UserName = @UserName, Password = @Password, Warehouse = @Warehouse, Role = @Role, DeviceId = @DeviceId, " +
-                    "IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn WHERE ID = @ID;";
-                var cmd = new SqlCommand(Squery, conn);
-                conn.Open();
-                login.UpdatedOn = DateTime.Now;
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.Parameters.AddWithValue("@UserName", login.UserName);
-                cmd.Parameters.AddWithValue("@Password", HashPassword(login.Password));
-                cmd.Parameters.AddWithValue("@Warehouse", login.WareHouse);
-                cmd.Parameters.AddWithValue("@Role", login.Role);
-                cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);               
-                cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
-                cmd.Parameters.AddWithValue("@UpdatedBy", login.UpdatedBy);
-                cmd.Parameters.AddWithValue("@UpdatedOn", login.UpdatedOn);
-                
-                var rowsAffected = await cmd.ExecuteNonQueryAsync();
-                conn.Close();
-                return rowsAffected > 0;
+                using (var conn = _databaseConfig.GetConnection())
+                {
+                    Squery = "UPDATE OUSR SET UserName = @UserName, Password = @Password, Warehouse = @Warehouse, Role = @Role, DeviceId = @DeviceId, " +
+                        "IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedOn = @UpdatedOn WHERE ID = @ID;";
+                    var cmd = new SqlCommand(Squery, conn);
+                    conn.Open();
+                    login.UpdatedOn = DateTime.Now;
+                    cmd.Parameters.AddWithValue("@ID", id);
+                    cmd.Parameters.AddWithValue("@UserName", login.UserName);
+                    cmd.Parameters.AddWithValue("@Password", HashPassword(login.Password));
+                    cmd.Parameters.AddWithValue("@Warehouse", login.WareHouse);
+                    cmd.Parameters.AddWithValue("@Role", login.Role);
+                    cmd.Parameters.AddWithValue("@DeviceId", login.DeviceId);
+                    cmd.Parameters.AddWithValue("@IsActive", login.IsActive);
+                    cmd.Parameters.AddWithValue("@UpdatedBy", login.UpdatedBy);
+                    cmd.Parameters.AddWithValue("@UpdatedOn", login.UpdatedOn);
+
+                    var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    conn.Close();
+                    return rowsAffected > 0;
+                }
             }
+            catch (Exception)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(UpdateUserAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{id},{login}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+            
         }
 
     }

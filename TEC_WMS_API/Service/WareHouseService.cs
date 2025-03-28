@@ -15,28 +15,47 @@ namespace TEC_WMS_API.Service
         string Squery = string.Empty;
         public async Task<IEnumerable<WareHouseRequest>> GetAllWareHouseAsync()
         {
-            var wareHouse = new List<WareHouseRequest>();
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "SELECT * FROM OWHS";
-                var cmd = new SqlCommand(Squery, conn);
-                await conn.OpenAsync();
-                using (var reader = await cmd.ExecuteReaderAsync())
+                var wareHouse = new List<WareHouseRequest>();
+                using (var conn = _databaseConfig.GetConnection())
                 {
-                    for (int i = 0; await reader.ReadAsync(); i++)
+                    Squery = "SELECT * FROM OWHS";
+                    var cmd = new SqlCommand(Squery, conn);
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        var warehouserequest = new WareHouseRequest
-                        { 
-                            WhsCode = reader.GetString(0), 
-                            WhsName = reader.GetString(1) 
-                        };
-                        wareHouse.Add(warehouserequest);
+                        for (int i = 0; await reader.ReadAsync(); i++)
+                        {
+                            var warehouserequest = new WareHouseRequest
+                            {
+                                WhsCode = reader.GetString(0),
+                                WhsName = reader.GetString(1)
+                            };
+                            wareHouse.Add(warehouserequest);
 
-                    };
-                    
+                        };
+
+                    }
+                    return wareHouse;
                 }
-                return wareHouse;
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(GetAllWareHouseAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{""}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+          
         }
     }
 }

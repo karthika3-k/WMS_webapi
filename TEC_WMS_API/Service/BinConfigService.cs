@@ -69,6 +69,17 @@ namespace TEC_WMS_API.Service
                 }
                 catch (Exception ex)
                 {
+                    var logEntry = new ExceptionLog
+                    {
+                        LogLevel = "Error",
+                        MethodName = nameof(CreateBinConfigsAsync),
+                        ModuleID = null,
+                        ExceptionMessage = ex.Message, 
+                        Parameters = $"{binConfigs}",
+                        StackTrace = string.Empty, 
+                        EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                    };
+                    _databaseConfig.InsertExceptionLogSP(logEntry);                   
                     throw new Exception("An error occurred while creating the BinConfigs.", ex);
                 }
                 finally
@@ -80,69 +91,128 @@ namespace TEC_WMS_API.Service
 
         public async Task<bool> DeleteBinConfigAsync(string whsCode)
         {
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "DELETE FROM OBNC WHERE WhsCode = @whsCode;";
-                var cmd = new SqlCommand(Squery, conn);
-                cmd.Parameters.AddWithValue("@whsCode", whsCode);
-                await conn.OpenAsync();
-                var rowsAffected = await cmd.ExecuteNonQueryAsync();
-                return rowsAffected > 0;
+                using (var conn = _databaseConfig.GetConnection())
+                {
+                    Squery = "DELETE FROM OBNC WHERE WhsCode = @whsCode;";
+                    var cmd = new SqlCommand(Squery, conn);
+                    cmd.Parameters.AddWithValue("@whsCode", whsCode);
+                    await conn.OpenAsync();
+                    var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    return rowsAffected > 0;
+                }
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(DeleteBinConfigAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{whsCode}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+            
         }
 
         public async Task<IEnumerable<BinConfigRequest>> GetAllBinConfigAsync()
         {
-            var binconfig = new List<BinConfigRequest>();
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "SELECT MIN(ID) AS ID, WhsCode, MIN(CAST(IsActive AS INT)) AS IsActive, MIN(CreatedOn) AS CreatedOn FROM OBNC GROUP BY WhsCode;";
-                var cmd = new SqlCommand(Squery, conn);
-                await conn.OpenAsync();
-                using (var reader = await cmd.ExecuteReaderAsync())
+                var binconfig = new List<BinConfigRequest>();
+                using (var conn = _databaseConfig.GetConnection())
                 {
-                    for (int i = 0; await reader.ReadAsync(); i++)
+                    Squery = "SELECT MIN(ID) AS ID, WhsCode, MIN(CAST(IsActive AS INT)) AS IsActive, MIN(CreatedOn) AS CreatedOn FROM OBNC GROUP BY WhsCode;";
+                    var cmd = new SqlCommand(Squery, conn);
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        var bincongrequest = new BinConfigRequest
-                        {   BinConfigId=reader.GetInt32(0),                         
-                            WhsCode = reader.GetString(1),
-                            IsActive = reader.GetInt32(2) != 0,                          
-                            CreatedOn = reader.GetDateTime(3),
-                        };
-                        binconfig.Add(bincongrequest);
+                        for (int i = 0; await reader.ReadAsync(); i++)
+                        {
+                            var bincongrequest = new BinConfigRequest
+                            {
+                                BinConfigId = reader.GetInt32(0),
+                                WhsCode = reader.GetString(1),
+                                IsActive = reader.GetInt32(2) != 0,
+                                CreatedOn = reader.GetDateTime(3),
+                            };
+                            binconfig.Add(bincongrequest);
+                        }
                     }
+                    return binconfig;
                 }
-                return binconfig;
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(GetAllBinConfigAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{""}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+           
+           
         }
          public async Task<IEnumerable<BinConfigRequest>> GetAllBinListbywhsConfigAsync(string whsCode)
         {
-            var binconfig = new List<BinConfigRequest>();
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "SELECT * FROM OBNC where WhsCode='"+ whsCode + "'";
-                var cmd = new SqlCommand(Squery, conn);
-                await conn.OpenAsync();
-                using (var reader = await cmd.ExecuteReaderAsync())
+                var binconfig = new List<BinConfigRequest>();
+                using (var conn = _databaseConfig.GetConnection())
                 {
-                    for (int i = 0; await reader.ReadAsync(); i++)
+                    Squery = "SELECT * FROM OBNC where WhsCode='" + whsCode + "'";
+                    var cmd = new SqlCommand(Squery, conn);
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        var bincongrequest = new BinConfigRequest
+                        for (int i = 0; await reader.ReadAsync(); i++)
                         {
-                            BinConfigId = reader.GetInt32(0),
-                            BinCode = reader.GetString(1),
-                            BinName = reader.GetString(2),
-                            Prefix = reader.GetString(3),
-                            WhsCode = reader.GetString(4),
-                            IsActive = reader.GetBoolean(5),
-                            CreatedBy = reader.GetString(6),
-                            CreatedOn = reader.GetDateTime(7),
-                        };
-                        binconfig.Add(bincongrequest);
+                            var bincongrequest = new BinConfigRequest
+                            {
+                                BinConfigId = reader.GetInt32(0),
+                                BinCode = reader.GetString(1),
+                                BinName = reader.GetString(2),
+                                Prefix = reader.GetString(3),
+                                WhsCode = reader.GetString(4),
+                                IsActive = reader.GetBoolean(5),
+                                CreatedBy = reader.GetString(6),
+                                CreatedOn = reader.GetDateTime(7),
+                            };
+                            binconfig.Add(bincongrequest);
+                        }
                     }
+                    return binconfig;
                 }
-                return binconfig;
             }
+            catch (Exception ex)
+            {
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(GetAllBinListbywhsConfigAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message,
+                    Parameters = $"{whsCode}",
+                    StackTrace = string.Empty,
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
+            }
+            
         }
 
         public async Task<BinConfigRequest?> GetBinConfigByIdAsync(int id)
@@ -275,6 +345,17 @@ namespace TEC_WMS_API.Service
                 }
                 catch (Exception ex)
                 {
+                    var logEntry = new ExceptionLog
+                    {
+                        LogLevel = "Error",
+                        MethodName = nameof(UpdateBinConfigAsync),
+                        ModuleID = null,
+                        ExceptionMessage = ex.Message, // Custom message
+                        Parameters = $"{binConfigs}",
+                        StackTrace = string.Empty, // No stack trace here
+                        EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                    };
+                    _databaseConfig.InsertExceptionLogSP(logEntry);
                     throw new Exception("An error occurred while updating or creating the BinConfig.", ex);
                 }
                 finally
