@@ -241,7 +241,7 @@ namespace TEC_WMS_API.Service
                     return rowsAffected > 0;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 var logEntry = new ExceptionLog
                 {
