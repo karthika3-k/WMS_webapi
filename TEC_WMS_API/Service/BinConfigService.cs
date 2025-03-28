@@ -147,31 +147,53 @@ namespace TEC_WMS_API.Service
 
         public async Task<BinConfigRequest?> GetBinConfigByIdAsync(int id)
         {
-            BinConfigRequest? binConfigRequest = null;
-            using (var conn = _databaseConfig.GetConnection())
+            try
             {
-                Squery = "SELECT * FROM OBNC WHERE ID = @id";
-                var cmd = new SqlCommand(Squery, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                await conn.OpenAsync();
-
-                using (var reader = await cmd.ExecuteReaderAsync())
+                BinConfigRequest? binConfigRequest = null;
+                using (var conn = _databaseConfig.GetConnection())
                 {
-                    if (await reader.ReadAsync())
+                    Squery = "SELECT * FROM OBNC WHERE ID = @id";
+                    var cmd = new SqlCommand(Squery, conn);
+                    cmd.Parameters.AddWithValue("@id", id);
+                    await conn.OpenAsync();
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        binConfigRequest = new BinConfigRequest
+
+                        if (await reader.ReadAsync())
                         {
-                            BinConfigId = reader.GetInt32(0),
-                            BinCode = reader.GetString(1),
-                            BinName = reader.GetString(2),
-                            Prefix = reader.GetString(3),
-                            WhsCode = reader.GetString(4),
-                        };
+                            binConfigRequest = new BinConfigRequest
+                            {
+                                BinConfigId = reader.GetInt32(0),
+                                BinCode = reader.GetString(1),
+                                BinName = reader.GetString(2),
+                                Prefix = reader.GetString(3),
+                                WhsCode = reader.GetString(4),
+                            };
+                        }
+
                     }
+
                 }
+                return binConfigRequest;
+            }
+            catch (Exception ex)
+            {
+
+                var logEntry = new ExceptionLog
+                {
+                    LogLevel = "Error",
+                    MethodName = nameof(GetBinConfigByIdAsync),
+                    ModuleID = null,
+                    ExceptionMessage = ex.Message, // Custom message
+                    Parameters = $"{id}",
+                    StackTrace = string.Empty, // No stack trace here
+                    EventTimestamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt")
+                };
+                _databaseConfig.InsertExceptionLogSP(logEntry);
+                throw;
 
             }
-            return binConfigRequest;
         }
 
         public async Task<bool> UpdateBinConfigAsync(IEnumerable<BinConfigRequest> binConfigs)
