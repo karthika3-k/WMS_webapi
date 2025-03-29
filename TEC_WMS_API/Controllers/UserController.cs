@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TEC_WMS_API.Models.RequestModel;
 using TEC_WMS_API.Service;
@@ -10,6 +11,7 @@ namespace TEC_WMS_API.Controllers
     
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly UserService _service;

@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using TEC_WMS_API.Data;
 using TEC_WMS_API.Interface;
 using TEC_WMS_API.Service;
@@ -13,13 +14,38 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var jwtSecurityScheme = new OpenApiSecurityScheme
+    {
+        BearerFormat = "JWT",
+
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        Description = "Enter your JWT Access Token",
+        Reference = new OpenApiReference
+        {
+            Id = JwtBearerDefaults.AuthenticationScheme,
+            Type = ReferenceType.SecurityScheme
+        }   
+    };
+    options.AddSecurityDefinition("Bearer", jwtSecurityScheme);
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            jwtSecurityScheme, Array.Empty<string>() 
+        }
+    });
+});
 
 #region JWT Token Generate
 builder.Services.AddAuthentication(option =>
 {
     option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(option =>
 {
     option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
@@ -33,7 +59,7 @@ builder.Services.AddAuthentication(option =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
-
+builder.Services.AddAuthorization();
 
 #endregion
 
@@ -61,12 +87,11 @@ builder.Services.AddScoped<IDevice, DeviceService>();
 builder.Services.AddScoped<IBinConfig, BinConfigService>();
 builder.Services.AddScoped<IWareHouse, WareHouseService>();
 builder.Services.AddScoped<IBinMaster, BinMasterService>();
+builder.Services.AddScoped<JwtService, JwtService>();
 #endregion
 
 
 var app = builder.Build();
-
-app.UseAuthentication();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -78,7 +103,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("CustomPolicy");
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

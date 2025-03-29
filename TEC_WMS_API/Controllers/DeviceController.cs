@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TEC_WMS_API.Interface;
 using TEC_WMS_API.Models.RequestModel;
@@ -8,6 +9,7 @@ namespace TEC_WMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DeviceController : ControllerBase
     {
         private readonly IDevice _service;

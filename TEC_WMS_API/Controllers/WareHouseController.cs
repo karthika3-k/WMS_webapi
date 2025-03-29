@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TEC_WMS_API.Interface;
 
@@ -6,6 +7,7 @@ namespace TEC_WMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class WareHouseController : ControllerBase
     {
         private readonly IWareHouse _service;

@@ -79,7 +79,7 @@ namespace TEC_WMS_API.Service
                                     signingCredentials: signIn
                                 );
                                 string tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
-                                return new LoginResponse { Token = tokenValue, Login = login };
+                                return new LoginResponse { AccessToken = tokenValue, UserName = login.UserName, Role=login.Role, UserId=login.UserId };
                                 //return login;
                             }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TEC_WMS_API.Models.RequestModel;
 using TEC_WMS_API.Service;
 
@@ -10,13 +11,16 @@ namespace TEC_WMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    
     public class LoginController : ControllerBase
     {
         private readonly LoginService _service;
         private readonly ILogger _logger;
-        public LoginController(LoginService service)
+        private readonly JwtService _jwtService;
+        public LoginController(LoginService service, JwtService jwtService)
         {
             _service = service;
+            _jwtService = jwtService;
         }      
 
         [HttpGet("Login")]
@@ -38,6 +42,7 @@ namespace TEC_WMS_API.Controllers
         }
 
         [HttpPut("UpdateUserPwd")]
+        [Authorize]
         public async Task<IActionResult> UpdateUserPwd(int id, string userName, string password)
         {
             if (string.IsNullOrEmpty(userName))
