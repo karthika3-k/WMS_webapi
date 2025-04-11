@@ -69,6 +69,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("CustomPolicy", x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 });
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("local", policy => { policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
+//});
+
 #endregion
 
 #region Database Config
@@ -87,7 +92,10 @@ builder.Services.AddScoped<IDevice, DeviceService>();
 builder.Services.AddScoped<IBinConfig, BinConfigService>();
 builder.Services.AddScoped<IWareHouse, WareHouseService>();
 builder.Services.AddScoped<IBinMaster, BinMasterService>();
+builder.Services.AddScoped<IInward, InwardService>();
+
 builder.Services.AddScoped<JwtService, JwtService>();
+
 #endregion
 
 
